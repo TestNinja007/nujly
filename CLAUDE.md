@@ -18,8 +18,13 @@ would drift, which is DEF-15 one layer up.
 
 ### The name
 
-*Decided 11 November 2026:* the product is called **Nujly**, spelled
+*Decided 11 November 2026:* the product is called **nujly**, spelled
 n-u-j-l-y. It is an invented spelling of "nudge". It was Nudge.
+
+*Decided 17 November 2026:* it is written in lower case, with a small n,
+wherever a person reads it: the wordmark, page titles, emails,
+notifications, and the start of a sentence. A trademark filing is the one
+exception, because registers write marks in capitals.
 
 **Nudgely came first, the same day, and was dropped.** It was taken in the
 same space:
@@ -33,9 +38,9 @@ was chosen, one that could be owned.
 
 **Checked on 11 November 2026, before committing to it:**
 
-- No trademark contains "Nujly", in the US (USPTO), Canada (CIPO) or WIPO's
+- No trademark contains "nujly", in the US (USPTO), Canada (CIPO) or WIPO's
   international database.
-- No app on either store, and no website, is called Nujly.
+- No app on either store, and no website, is called nujly.
 - **It sounds like Nudgely,** and trademark law judges names by sound as well
   as spelling. Two live products use Nudgely for what this one does:
   nudgely.co, an AI habit-accountability service that sends SMS nudges, and

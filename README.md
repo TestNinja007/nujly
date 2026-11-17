@@ -1,4 +1,4 @@
-# Nujly
+# nujly
 
 Formerly "Alarm Configurator", then Nudge.
 
