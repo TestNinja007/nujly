@@ -22,8 +22,19 @@ export const POLL_INTERVAL_MS = 30_000;
 export const LOOKAHEAD_MS = 120_000;
 
 /** Fired occurrences are remembered here so a reload cannot repeat them. */
-const FIRED_STORAGE_KEY = 'alarm-configurator:fired-occurrences';
-const ENABLED_STORAGE_KEY = 'alarm-configurator:notifications-enabled';
+const FIRED_STORAGE_KEY = 'nujly:fired-occurrences';
+const ENABLED_STORAGE_KEY = 'nujly:notifications-enabled';
+
+/**
+ * The same two keys under the repository's old name, used until 17 November
+ * 2026. Moved once, when this module loads, so a browser that had
+ * notifications on keeps them on, and an occurrence that already fired does
+ * not fire again.
+ */
+const LEGACY_STORAGE_KEYS = [
+  ['alarm-configurator:fired-occurrences', FIRED_STORAGE_KEY],
+  ['alarm-configurator:notifications-enabled', ENABLED_STORAGE_KEY],
+] as const;
 
 export type NotificationPermissionState = 'unsupported' | 'default' | 'granted' | 'denied';
 
@@ -43,6 +54,27 @@ function writeStorage(key: string, value: string): void {
     // Not being able to remember is survivable; the app still works.
   }
 }
+
+function removeStorage(key: string): void {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // As above: a key that cannot be removed does no harm.
+  }
+}
+
+function moveLegacyStorage(): void {
+  for (const [legacy, current] of LEGACY_STORAGE_KEYS) {
+    const value = readStorage(legacy);
+    if (value === null) continue;
+    // A value already under the new name is the newer one, so it wins.
+    if (readStorage(current) === null) writeStorage(current, value);
+    // The old key goes only once the value is safe under the new one.
+    if (readStorage(current) !== null) removeStorage(legacy);
+  }
+}
+
+moveLegacyStorage();
 
 function loadFired(): Set<string> {
   const raw = readStorage(FIRED_STORAGE_KEY);
@@ -333,7 +365,7 @@ export function useAlarmNotifications() {
     try {
       new Notification('Nujly', {
         body: 'Notifications are working. Alarms will appear like this.',
-        tag: 'alarm-configurator-test',
+        tag: 'nujly-test',
       });
       setLastFired('test');
     } catch {

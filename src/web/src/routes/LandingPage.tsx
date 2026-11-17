@@ -9,7 +9,7 @@ import {
   SwitchingArt,
 } from '../components/Illustrations';
 
-const REPO_URL = 'https://github.com/TestNinja007/alarm-configurator';
+const REPO_URL = 'https://github.com/TestNinja007/nujly';
 
 /**
  * The range, drawn as a line rather than described in a paragraph.

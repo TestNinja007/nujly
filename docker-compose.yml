@@ -17,9 +17,9 @@ services:
   db:
     image: postgres:18-alpine
     environment:
-      POSTGRES_USER: alarm_app
-      POSTGRES_PASSWORD: alarm_app
-      POSTGRES_DB: alarm_configurator
+      POSTGRES_USER: nujly_app
+      POSTGRES_PASSWORD: nujly_app
+      POSTGRES_DB: nujly
     ports:
       # Exposed so a test framework on the host can query the database directly.
       # 5433, so it does not collide with a PostgreSQL installed on the host.
@@ -33,7 +33,7 @@ services:
       # Over TCP on purpose. While it initialises a new database the image runs
       # a temporary server on the Unix socket only; a socket check would pass
       # then, and let the API connect to a server that is about to restart.
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U alarm_app -d alarm_configurator"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U nujly_app -d nujly"]
       interval: 3s
       timeout: 3s
       retries: 20
@@ -65,7 +65,7 @@ services:
       mail:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://alarm_app:alarm_app@db:5432/alarm_configurator
+      DATABASE_URL: postgresql://nujly_app:nujly_app@db:5432/nujly
       PORT: 8080
       TEST_SUPPORT: "1"
       SEED_PROFILE: demo
@@ -99,7 +99,7 @@ services:
     environment:
       # The API's server and database, with a schema of its own inside them -
       # "Data: schema per service" in CLAUDE.md. It migrates that schema itself.
-      DATABASE_URL: postgresql://alarm_app:alarm_app@db:5432/alarm_configurator
+      DATABASE_URL: postgresql://nujly_app:nujly_app@db:5432/nujly
       SPEECH_SERVICE_TOKEN: *speech-token
       # Real, playable audio with no account, key or quota.
       TTS_PROVIDER: mock

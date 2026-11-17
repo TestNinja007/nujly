@@ -4,7 +4,7 @@
 # database is empty, then serve.
 services:
   - type: web
-    name: alarm-configurator
+    name: nujly
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
