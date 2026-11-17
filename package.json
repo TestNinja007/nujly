@@ -1,5 +1,5 @@
 {
-  "name": "alarm-configurator",
+  "name": "nujly",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -12,18 +12,18 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "npm run build --workspace @alarm/web && npm run build --workspace @alarm/api && npm run build --workspace @alarm/speech",
-    "start": "npm run start --workspace @alarm/api",
-    "dev:api": "npm run dev --workspace @alarm/api",
-    "dev:web": "npm run dev --workspace @alarm/web",
-    "migrate": "npm run migrate --workspace @alarm/api",
-    "seed": "npm run seed --workspace @alarm/api",
-    "test": "npm run test --workspace @alarm/api && npm run test --workspace @alarm/speech",
-    "typecheck": "npm run typecheck --workspace @alarm/api && npm run typecheck --workspace @alarm/web && npm run typecheck --workspace @alarm/speech",
-    "lint": "npm run lint --workspace @alarm/api && npm run lint --workspace @alarm/web && npm run lint --workspace @alarm/speech",
+    "build": "npm run build --workspace @nujly/web && npm run build --workspace @nujly/api && npm run build --workspace @nujly/speech",
+    "start": "npm run start --workspace @nujly/api",
+    "dev:api": "npm run dev --workspace @nujly/api",
+    "dev:web": "npm run dev --workspace @nujly/web",
+    "migrate": "npm run migrate --workspace @nujly/api",
+    "seed": "npm run seed --workspace @nujly/api",
+    "test": "npm run test --workspace @nujly/api && npm run test --workspace @nujly/speech",
+    "typecheck": "npm run typecheck --workspace @nujly/api && npm run typecheck --workspace @nujly/web && npm run typecheck --workspace @nujly/speech",
+    "lint": "npm run lint --workspace @nujly/api && npm run lint --workspace @nujly/web && npm run lint --workspace @nujly/speech",
     "docs:seed": "tsx scripts/generate-seed-doc.ts",
     "ci": "npm run lint && npm run typecheck && npm run build && npm test",
-    "start:speech": "npm run start --workspace @alarm/speech",
-    "migrate:speech": "npm run migrate --workspace @alarm/speech"
+    "start:speech": "npm run start --workspace @nujly/speech",
+    "migrate:speech": "npm run migrate --workspace @nujly/speech"
   }
 }

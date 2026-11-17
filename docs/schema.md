@@ -9,7 +9,7 @@ Connection string: `DATABASE_URL`. Under `docker compose` the database is also
 published on host port **5433**:
 
 ```
-postgresql://alarm_app:alarm_app@127.0.0.1:5433/alarm_configurator
+postgresql://nujly_app:nujly_app@127.0.0.1:5433/nujly
 ```
 
 ## How time is stored

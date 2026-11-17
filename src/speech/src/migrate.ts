@@ -65,7 +65,7 @@ export async function migrate(databaseUrl: string, schema: string): Promise<stri
   }
 }
 
-// Run directly: `npm run migrate --workspace @alarm/speech`.
+// Run directly: `npm run migrate --workspace @nujly/speech`.
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const config = loadConfig();
   if (!config.databaseUrl) {

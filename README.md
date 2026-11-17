@@ -1,8 +1,6 @@
-# Nujly
+# nujly
 
-Formerly "Alarm Configurator" — the repository, package and database names keep
-the old one, since renaming those is noise for no benefit. Only what a person
-sees says Nujly.
+Formerly "Alarm Configurator", then Nudge.
 
 A small web application for configuring recurring alarms: folders hold alarms,
 an alarm is a local time of day plus an IANA time zone plus a repetition rule,
@@ -222,7 +220,7 @@ a registered user can sign in, that an alarm can be created, that it fires. A
 requirement set made only of edge cases describes a product nobody can use
 correctly.
 
-[DEF-17]: https://github.com/TestNinja007/alarm-test-framework/blob/main/docs/defects/README.md#def-17
+[DEF-17]: https://github.com/TestNinja007/nujly-test-framework/blob/main/docs/defects/README.md#def-17
 
 ### Ending a series
 
@@ -762,7 +760,7 @@ and errors are linked with `aria-describedby`.
 published on host port **5433**, so a framework can assert against it directly:
 
 ```
-postgresql://alarm_app:alarm_app@127.0.0.1:5433/alarm_configurator
+postgresql://nujly_app:nujly_app@127.0.0.1:5433/nujly
 ```
 
 [`docs/schema.md`](docs/schema.md) documents the tables, the key columns, the

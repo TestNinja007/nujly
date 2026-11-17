@@ -7,7 +7,7 @@ Loaded automatically each session, version-controlled, and yours to edit.
 
 The test effort has its own decisions — the two-stack split, TestQuality, and
 what is out of scope — in `CLAUDE.md` of the
-[alarm-test-framework](https://github.com/TestNinja007/alarm-test-framework)
+[nujly-test-framework](https://github.com/TestNinja007/nujly-test-framework)
 repository, checked out alongside this one. Only the decisions that change how
 *this* repository is worked on are repeated here; a second copy of the rest
 would drift, which is DEF-15 one layer up.
@@ -18,8 +18,13 @@ would drift, which is DEF-15 one layer up.
 
 ### The name
 
-*Decided 11 November 2026:* the product is called **Nujly**, spelled
+*Decided 11 November 2026:* the product is called **nujly**, spelled
 n-u-j-l-y. It is an invented spelling of "nudge". It was Nudge.
+
+*Decided 17 November 2026:* it is written in lower case, with a small n,
+wherever a person reads it: the wordmark, page titles, emails,
+notifications, and the start of a sentence. A trademark filing is the one
+exception, because registers write marks in capitals.
 
 **Nudgely came first, the same day, and was dropped.** It was taken in the
 same space:
@@ -33,9 +38,9 @@ was chosen, one that could be owned.
 
 **Checked on 11 November 2026, before committing to it:**
 
-- No trademark contains "Nujly", in the US (USPTO), Canada (CIPO) or WIPO's
+- No trademark contains "nujly", in the US (USPTO), Canada (CIPO) or WIPO's
   international database.
-- No app on either store, and no website, is called Nujly.
+- No app on either store, and no website, is called nujly.
 - **It sounds like Nudgely,** and trademark law judges names by sound as well
   as spelling. Two live products use Nudgely for what this one does:
   nudgely.co, an AI habit-accountability service that sends SMS nudges, and
@@ -60,12 +65,39 @@ behind them.
 It needed no code change. Nothing in the application hard-codes its own
 address, because one origin serves both the API and the web app.
 
-The rule the README already stated still holds: only what a person sees
-carries the name. That covers the interface, the emails, the API
-documentation's title and the README. Repository, package and database names
-keep the old one, and so do the test framework's dashboard and job
-identifiers. The common noun stays a common noun: "a nudge, not a siren" is
-the product's voice, not its name.
+*Decided 17 November 2026:* everything else carries the name too. Until then
+only what a person sees did, and repository, package and database names kept
+the old one. The owner asked for one name throughout. Renamed that day:
+
+- the repositories, now `TestNinja007/nujly` and
+  `TestNinja007/nujly-test-framework`. GitHub redirects the old addresses,
+  except the test results site, which moved to
+  <https://testninja007.github.io/nujly-test-framework/>;
+- the folders in `E:\Project`: `nujly`, `nujly-test-framework` and
+  `nujly-mobile`;
+- the npm packages: `nujly`, `@nujly/api`, `@nujly/web` and `@nujly/speech`;
+- the database and role that Docker Compose and CI create: `nujly` and
+  `nujly_app`;
+- the test framework's Prometheus job, Grafana dashboard and container names;
+- the Render service, `nujly`, and the source it builds from,
+  `https://github.com/TestNinja007/nujly`. Both are set in Render's dashboard.
+
+Some names stay, because changing them is not possible or costs more than it
+gives:
+
+- `alarm-configurator.onrender.com`. Render fixes the subdomain when a
+  service is created, and people use nujly.com.
+- The production database, `alarm1-configurator-db`. Render cannot rename a
+  database, and this one expires around 1 December anyway: call the next one
+  `nujly-db`.
+- The owner's local database, `alarm_configurator`. Renaming it needs the
+  PostgreSQL superuser, and `.env` already points at it.
+- Two keys in the browser's storage. The web app moves them to their new
+  names the first time it loads, so nobody loses a setting
+  (`useAlarmNotifications.ts`).
+
+The common noun stays a common noun: "a nudge, not a siren" is the product's
+voice, not its name.
 
 The deployed site's sender name comes from `MAIL_FROM`, which is set in the
 Render dashboard rather than in `render.yaml`. If it names Nudge, it changes
@@ -74,7 +106,7 @@ there, by hand.
 ### App first
 
 *Decided 11 November 2026:* the mobile app is the main product. It lives in
-`alarm-mobile`, which is checked out beside this repository and is local-only
+`nujly-mobile`, which is checked out beside this repository and is local-only
 for now. The browser app in this repository is secondary, because people
 rarely go to a website.
 
@@ -98,7 +130,7 @@ database it never becomes healthy and requests simply hang.
 than pay or move providers - accepting that it will expire again roughly 30 days
 after creation. When the site goes down with requests hanging rather than
 erroring, check the database's status in the Render dashboard first. Recovery
-is: new free database (same region; Render will not reuse an expired database's name, so the name changes and `render.yaml` must change with it — currently `alarm1-configurator-db`), point `DATABASE_URL` at it,
+is: new free database (same region; Render will not reuse an expired database's name, so the name changes and `render.yaml` must change with it — currently `alarm1-configurator-db`; call the next one `nujly-db`), point `DATABASE_URL` at it,
 deploy manually; boot recreates the schema and the demo seed.
 
 **Production runs in the container.** The Render service builds the
@@ -126,7 +158,7 @@ runtime set to Docker. So the service, its environment variables, its database
 and its domains (`nujly.com`, `www.nujly.com`) are all unchanged. To roll back,
 use the same dialog with runtime **Node**, build command
 `npm ci --include=dev && npm run build` and start command
-`npm start --workspace @alarm/api`.
+`npm start --workspace @nujly/api`.
 
 Some things the container does not change:
 
@@ -142,7 +174,7 @@ the framework's and reporting it clean left this repository's CI red for four
 commits.
 
 ```bash
-npm run lint        # all three workspaces: @alarm/api, @alarm/web, @alarm/speech
+npm run lint        # all three workspaces: @nujly/api, @nujly/web, @nujly/speech
 npm run typecheck
 npm test            # vitest
 npm run build
@@ -164,7 +196,7 @@ read the README could reset the public demo.
 Running locally for the test framework:
 
 ```bash
-TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @alarm/api
+TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @nujly/api
 ```
 
 ## Where things stand
@@ -172,7 +204,7 @@ TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @alarm/api
 *Last updated 11 November 2026. Update this when it stops being true.*
 
 The application is covered by two test stacks in the
-[alarm-test-framework](https://github.com/TestNinja007/alarm-test-framework)
+[nujly-test-framework](https://github.com/TestNinja007/nujly-test-framework)
 repository — 78 Playwright specs across three engines and 68 pytest tests
 against the database — plus 96 tests here: 80 in the main API and 16 in the
 speech service, including the contract tests between the two.
@@ -233,7 +265,7 @@ almost everything, which is easy to misread as the tests having changed.
 
 ```bash
 npm run build
-TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @alarm/api
+TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @nujly/api
 ```
 
 ## Alarm sequences
