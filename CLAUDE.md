@@ -206,8 +206,9 @@ TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @nujly/api
 The application is covered by two test stacks in the
 [nujly-test-framework](https://github.com/TestNinja007/nujly-test-framework)
 repository — 78 Playwright specs across three engines and 68 pytest tests
-against the database — plus 96 tests here: 80 in the main API and 16 in the
-speech service, including the contract tests between the two.
+against the database — plus 262 tests here: 246 in the main API, 166 of them
+one matrix comparing the engine with its old walk, and 16 in the speech
+service, including the contract tests between the two.
 
 **R-07 failed from 1 November 2026 until 8 November, with no code changed.**
 The engine took Luxon's answer for a repeated hour, and Luxon's answer depends
@@ -227,7 +228,8 @@ single application, deliberately.
 multi-second maxima on database-backed endpoints under load, cause not
 established. Its symptoms reach this repository as pool acquisition failures,
 which now answer 503 with `Retry-After` rather than an unhandled 500 — correct
-reporting of a fault, which is not a fix for it.
+reporting of a fault, which is not a fix for it. The recurrence engine was
+measured as a suspect and ruled out; see "Where the engine starts walking".
 
 ### Sequences: built, and not yet covered by a test
 
@@ -409,6 +411,46 @@ between the two are fully testable, which is what this extraction is for.
   isolation a permission rather than a convention. Needs a superuser.
 - **Test cases for it.** Like sequences, the speech service has no requirements
   and no designed cases - only the engineering tests written alongside it.
+
+## Where the engine starts walking
+
+*Decided 17 November 2026.*
+
+The recurrence engine used to walk every candidate date from an alarm's
+`startDate` on every query, so a query cost more the older the alarm: roughly
+linear in days since the start, and in occurrences per day. It was measured on
+8 November as a suspect for DEF-08 and **ruled out**: under DEF-08's own
+conditions it cost about 17 ms per `/me/upcoming`, and the load profile peaked at
+384 ms. It was still the ceiling on that profile, though - the same code ran at
+841 requests a second with the seed one day old and 159 with it four months old -
+and extreme start dates made a single request very expensive.
+
+**The engine now starts a day before the requested window**, unless
+`endAfterOccurrences` is set: a count starts at the very first occurrence, so
+that walk still begins at `startDate`, and stops once the count is spent. The
+day of margin is for R-06 moving a late time past midnight (Greenland springs
+forward at 23:00). Results are unchanged, which the engine tests check against
+the old walk across every rule and five zones' transitions.
+
+Chosen over a floor on `startDate`, which needed new product rules, would have
+broken TC43 (it creates an already-finished alarm from 2020-01-01 on purpose),
+and still left the cost of dense schedules to the advanced tier.
+
+Two corrections came with it. A year below 100 was read as 1900 plus that year,
+so a series from 0050 produced dates in 1950. And an interval in days or weeks
+is counted from `startDate` each time rather than stepped: stepping from a date
+that never existed (Samoa skipped 30 December 2011) shifted every later
+occurrence by a day.
+
+### Still open
+
+- **A series with a count still walks from its start**, bounded by the count
+  (at most 1,000). Weekly on one day, from far back, is about 125 ms.
+- **R-08 over dense alarms is expensive by design**: two alarms that fire every
+  second compare about 324,000 instants each across the 90-day window, around
+  5 s a pair. Unrelated to age; whether to bound it further is undecided.
+- **Preview applies no tier check**, so any account can preview a schedule it
+  could not save.
 
 ## Conventions that are easy to get wrong
 
