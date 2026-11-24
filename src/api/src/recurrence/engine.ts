@@ -116,6 +116,19 @@ const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
 
 /**
+ * A local calendar date as a day number, counted from 1970-01-01 and blind to
+ * zones and to the time of day, so two dates can be subtracted.
+ *
+ * Not Date.UTC: it reads a year below 100 as 1900 plus that year, and the
+ * schema accepts any real date from 0001-01-01.
+ */
+function calendarDay(date: DateTime): number {
+  const day = new Date(0);
+  day.setUTCFullYear(date.year, date.month - 1, date.day);
+  return Math.round(day.getTime() / DAY_MS);
+}
+
+/**
  * Turns wall-clock times on one local date into instants: give it the date,
  * then call the result with a second-of-day. This is the single place where
  * R-06 and R-07 take effect.
@@ -151,7 +164,7 @@ function resolverFor(date: DateTime, zone: string): (secondOfDay: number) => Dat
   // The date's midnight as a number, as though it were UTC. A wall-clock
   // reading is that plus the second-of-day, and subtracting an offset turns
   // the reading into an instant.
-  const midnight = Date.UTC(date.year, date.month - 1, date.day);
+  const midnight = calendarDay(date) * DAY_MS;
   const before = tz.offset(midnight - DAY_MS);
   const after = tz.offset(midnight + 2 * DAY_MS);
   const offsets = before === after ? [before] : [before, after];
@@ -211,13 +224,21 @@ function secondsWithinDay(spec: ScheduleSpec): number[] {
  */
 export const MAX_PER_DAY = 4000;
 
-/** Candidate local dates for the rule, ascending, starting at startDate. */
-function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
+/**
+ * Candidate local dates for the rule, ascending, from startDate.
+ *
+ * Given a `notBefore` later than startDate, candidates before that date may be
+ * skipped without being produced, and none on or after it is. The cadence is
+ * still counted from startDate, so an interval of three days lands on the same
+ * dates whether it is entered at the start or a year in.
+ */
+function* candidateDates(spec: ScheduleSpec, notBefore?: DateTime): Generator<DateTime> {
   const zone = spec.timezone;
   const start = parseLocalDate(spec.startDate, zone);
   if (!start.isValid) throw new RecurrenceError(`Invalid startDate: ${spec.startDate}`);
 
   const rule = spec.rule;
+  const first = notBefore && calendarDay(notBefore) > calendarDay(start) ? notBefore : start;
 
   switch (rule.type) {
     case 'once': {
@@ -226,7 +247,7 @@ function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
     }
 
     case 'daily': {
-      for (let cursor = start, i = 0; i < MAX_CANDIDATES; i += 1, cursor = cursor.plus({ days: 1 })) {
+      for (let cursor = first, i = 0; i < MAX_CANDIDATES; i += 1, cursor = cursor.plus({ days: 1 })) {
         yield cursor;
       }
       return;
@@ -234,7 +255,7 @@ function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
 
     case 'weekly': {
       const wanted = new Set(rule.byWeekday.map((day) => WEEKDAY_NUMBERS[day]));
-      for (let cursor = start, i = 0; i < MAX_CANDIDATES; i += 1, cursor = cursor.plus({ days: 1 })) {
+      for (let cursor = first, i = 0; i < MAX_CANDIDATES; i += 1, cursor = cursor.plus({ days: 1 })) {
         if (wanted.has(cursor.weekday)) yield cursor;
       }
       return;
@@ -243,7 +264,7 @@ function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
     case 'monthly_day': {
       // R-04: a month shorter than dayOfMonth is skipped outright. February
       // never yields a 31st, and nothing is clamped back to the 28th or 30th.
-      let month = start.startOf('month');
+      let month = first.startOf('month');
       for (let i = 0; i < MAX_CANDIDATES; i += 1, month = month.plus({ months: 1 })) {
         if (rule.dayOfMonth > month.daysInMonth!) continue;
         const candidate = month.set({ day: rule.dayOfMonth });
@@ -255,7 +276,7 @@ function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
 
     case 'monthly_nth': {
       const weekday = WEEKDAY_NUMBERS[rule.weekday];
-      let month = start.startOf('month');
+      let month = first.startOf('month');
       for (let i = 0; i < MAX_CANDIDATES; i += 1, month = month.plus({ months: 1 })) {
         const candidate = nthWeekdayOfMonth(month, weekday, rule.nth);
         // R-05: a month that has no such weekday is skipped rather than
@@ -272,7 +293,9 @@ function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
         // The anchor day comes from startDate, and short months are skipped
         // exactly as in R-04 rather than clamped.
         const anchorDay = start.day;
-        for (let i = 0; i < MAX_CANDIDATES; i += 1) {
+        const monthsIn = (first.year - start.year) * 12 + (first.month - start.month);
+        const skipped = Math.floor(monthsIn / rule.every);
+        for (let i = skipped, n = 0; n < MAX_CANDIDATES; i += 1, n += 1) {
           const month = start.startOf('month').plus({ months: i * rule.every });
           if (anchorDay > month.daysInMonth!) continue;
           yield month.set({ day: anchorDay });
@@ -280,9 +303,17 @@ function* candidateDates(spec: ScheduleSpec): Generator<DateTime> {
         return;
       }
 
-      const step = rule.unit === 'weeks' ? { weeks: rule.every } : { days: rule.every };
-      for (let cursor = start, i = 0; i < MAX_CANDIDATES; i += 1, cursor = cursor.plus(step)) {
-        yield cursor;
+      /*
+       * Each date is counted from startDate rather than stepped from the one
+       * before, which is what lets the walk begin anywhere. It also keeps the
+       * cadence where a date never existed: Samoa skipped 30 December 2011,
+       * and stepping from a date moved past the gap used to shift every later
+       * one by a day.
+       */
+      const stepDays = rule.unit === 'weeks' ? rule.every * 7 : rule.every;
+      const skipped = Math.floor((calendarDay(first) - calendarDay(start)) / stepDays);
+      for (let i = skipped, n = 0; n < MAX_CANDIDATES; i += 1, n += 1) {
+        yield start.plus({ days: i * stepDays });
       }
       return;
     }
@@ -318,7 +349,14 @@ function formatOccurrence(instant: DateTime): Occurrence {
  *
  * `endAfterOccurrences` counts from the very first occurrence the rule ever
  * produces, not from the start of the requested window, so iteration always
- * begins at startDate when a count limit is set.
+ * begins at startDate when a count limit is set. That walk ends once the count
+ * is spent, so it is bounded by the count.
+ *
+ * Without a count it begins just before the window instead. Walking from
+ * startDate made every query cost more the older the alarm was - about 0.2 s
+ * for a five-minute alarm started ten months earlier, on every poll - and a
+ * start date centuries back exhausted MAX_CANDIDATES before reaching the
+ * window, so the alarm never fired at all.
  */
 export function occurrencesFor(spec: ScheduleSpec, window: OccurrenceWindow): Occurrence[] {
   return placedOccurrencesFor(spec, window).map(({ utc, local }) => ({ utc, local }));
@@ -354,7 +392,21 @@ export function placedOccurrencesFor(
 
   const secondsOfDayList = secondsWithinDay(spec);
 
-  for (const date of candidateDates(spec)) {
+  /*
+   * A day before the window's own local date. R-06 can move a time late on
+   * one date past midnight into the next - Greenland springs forward at 23:00 -
+   * so an occurrence at or after `from` can belong to the date before it.
+   *
+   * A calendar that goes back a day needs no more: Alaska did in 1867, and a
+   * time on the earlier date then happens twice, which R-07 resolves to the
+   * first, before the change.
+   */
+  const notBefore =
+    maxCount === undefined && window.from
+      ? DateTime.fromJSDate(window.from, { zone }).startOf('day').minus({ days: 1 })
+      : undefined;
+
+  for (const date of candidateDates(spec, notBefore)) {
     // R-04's end condition: an endDate stops the rule, inclusive of that day.
     if (endDate && date > endDate) break;
     if (maxCount !== undefined && produced >= maxCount) break;
