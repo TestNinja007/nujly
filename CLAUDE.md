@@ -73,14 +73,18 @@ the old one. The owner asked for one name throughout. Renamed that day:
   `TestNinja007/nujly-test-framework`. GitHub redirects the old addresses,
   except the test results site, which moved to
   <https://testninja007.github.io/nujly-test-framework/>;
-- the folders in `E:\Project`: `nujly`, `nujly-test-framework` and
-  `nujly-mobile`;
 - the npm packages: `nujly`, `@nujly/api`, `@nujly/web` and `@nujly/speech`;
 - the database and role that Docker Compose and CI create: `nujly` and
   `nujly_app`;
 - the test framework's Prometheus job, Grafana dashboard and container names;
 - the Render service, `nujly`, and the source it builds from,
   `https://github.com/TestNinja007/nujly`. Both are set in Render's dashboard.
+
+The folders in `E:\Project` become `nujly`, `nujly-test-framework` and
+`nujly-mobile` when `E:\Project\rename-folders-to-nujly.ps1` runs. It has to
+run with the Claude app closed, because Windows will not rename a folder a
+program has open, and it repairs the worktrees' links after the move. Until
+it has run, the folders keep their old names.
 
 Some names stay, because changing them is not possible or costs more than it
 gives:
@@ -98,10 +102,6 @@ gives:
 
 The common noun stays a common noun: "a nudge, not a siren" is the product's
 voice, not its name.
-
-The deployed site's sender name comes from `MAIL_FROM`, which is set in the
-Render dashboard rather than in `render.yaml`. If it names Nudge, it changes
-there, by hand.
 
 ### App first
 
@@ -166,6 +166,31 @@ Some things the container does not change:
 - Render sets `PORT`, and the API reads it.
 - Render ignores the image's `HEALTHCHECK` and uses `/api/v1/health`.
 - The speech service is still not deployed.
+
+### Email
+
+*Decided 18 November 2026:* the site sends from `nujly <no-reply@nujly.com>`,
+through Brevo. Until then it sent from the owner's personal address, which
+Brevo had verified as a sender. nujly.com has no mailbox, so a reply bounces.
+
+- **nujly.com is authenticated in Brevo,** so the mail is signed for
+  nujly.com and passes DMARC. Brevo wrote its records into Cloudflare itself:
+  a `brevo-code` TXT record, DKIM CNAMEs at `brevo1._domainkey` and
+  `brevo2._domainkey`, and DMARC at `_dmarc` with `p=none`, reporting to
+  Brevo. Like the web records, they are DNS only.
+- **It is not branded.** Brevo's branded subdomain only rewrites tracking
+  links and images, and these emails are plain text with neither
+  (`src/api/src/mail/messages.ts`).
+- **`MAIL_FROM` is set in the Render dashboard,** not in `render.yaml`, which
+  marks it `sync: false` so a sync never overwrites it. Its address must be
+  one of Brevo's verified senders. The owner's personal sender was deleted
+  from Brevo, and mail sent from it afterwards was accepted and then failed.
+
+**"A new code is on its way" means Brevo accepted the request, not that the
+email went out.** Brevo can accept a message and fail it afterwards, and the
+site only learns of a refusal made on the spot, which is when it says "The
+code could not be sent". What really happened is in Brevo, under
+**Transactional → Logs**: the From column and each message's events.
 
 ## Verifying a change
 
