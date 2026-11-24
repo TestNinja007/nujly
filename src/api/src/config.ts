@@ -65,6 +65,12 @@ export const config = {
    * test framework is trying to assert against locally.
    */
   demoMode: process.env.DEMO_MODE === '1',
+  /**
+   * The owner's address. Once confirmed, that account is an administrator on
+   * the advanced tier (domain/owner.ts). Set in the host's dashboard and never
+   * committed: the repository is public.
+   */
+  adminEmail: process.env.ADMIN_EMAIL?.trim() || undefined,
   /** T-01..T-03 are only mounted when this is exactly "1". */
   testSupport: process.env.TEST_SUPPORT === '1',
   seedAnchor: process.env.SEED_ANCHOR ?? '2026-06-15T18:00:00Z',

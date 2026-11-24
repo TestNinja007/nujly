@@ -8,6 +8,7 @@
 import { config } from './config.js';
 import { migrate } from './db/migrate.js';
 import { pool, queryOne } from './db/pool.js';
+import { grantOwnerAccess } from './domain/owner.js';
 import { seed } from './seed/index.js';
 import { buildServer } from './server.js';
 
@@ -28,12 +29,24 @@ async function maybeSeed(): Promise<string> {
   return `seeded the "${config.seedProfile}" profile`;
 }
 
+/**
+ * Runs after the seed, which would otherwise wipe it. The address is never
+ * logged: it is personal, and the log is read by more than its owner.
+ */
+async function ownerAccess(): Promise<string> {
+  if (!config.adminEmail) return 'none named (ADMIN_EMAIL is unset)';
+  return (await grantOwnerAccess(config.adminEmail))
+    ? 'an administrator on the advanced tier'
+    : 'no confirmed account yet; it becomes an administrator once its address is confirmed';
+}
+
 async function main(): Promise<void> {
   const applied = await migrate();
   console.log(
     applied.length === 0 ? 'Migrations: none pending' : `Migrations: applied ${applied.join(', ')}`,
   );
   console.log(`Seed: ${await maybeSeed()}`);
+  console.log(`Owner: ${await ownerAccess()}`);
 
   const app = await buildServer();
 

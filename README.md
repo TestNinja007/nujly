@@ -65,7 +65,7 @@ same image CI's `container` job builds and starts on every push. It migrates,
 seeds if the database is empty, then serves. The live site is
 <https://nujly.com>.
 
-The deployed configuration differs from local in three ways, all deliberate:
+The deployed configuration differs from local in these ways, all deliberate:
 
 | Setting | Deployed | Why |
 | --- | --- | --- |
@@ -74,6 +74,7 @@ The deployed configuration differs from local in three ways, all deliberate:
 | `SESSION_SECRET` | generated | Production refuses to start on a short or missing secret. |
 | `DEMO_MODE` | `1` | Shows a banner saying the instance is a public sandbox with published credentials. Off locally, so it never sits in the way of a test run. |
 | `REGISTRATION_OPEN` | `1` | Anyone may create an account on the public instance. Closed everywhere else. |
+| `ADMIN_EMAIL` | the owner's address | That account is an administrator on the advanced tier. Set in the dashboard, not in `render.yaml`, because this repository is public. |
 
 Session cookies are marked `Secure` whenever `NODE_ENV=production`, and the
 server trusts `X-Forwarded-*` so it sees the real protocol behind the platform's
@@ -129,6 +130,14 @@ person's folder does, so nothing confirms the routes exist.
 An administrator cannot demote or suspend themselves: either would lock them out
 of the page with no way back. Both are 409.
 
+**The owner's account is an administrator from the start.** Every new account
+is an ordinary user on the basic tier, and only an administrator can change
+that, so `ADMIN_EMAIL` names one account that is an administrator on the
+advanced tier. It is applied at every boot and the moment that address is
+confirmed, so a replaced database needs nothing more than signing up again.
+Only a confirmed address counts: until its code is entered, the account could
+belong to anyone who typed the address in.
+
 **Suspending ends every session at once** rather than waiting for one to expire,
 and a suspended account cannot sign in — 401 with `details.reason` of
 `account_suspended`. Its folders and alarms are untouched, so restoring it
@@ -144,6 +153,7 @@ restores everything.
 | `SEED_ANCHOR` | `2026-06-15T18:00:00Z` | Every seeded date derives from this instant, so reseeding twice produces identical data. |
 | `DEMO_MODE` | `0` | `1` shows the public-sandbox banner on every page. The deployed instance sets it; leave it off locally. |
 | `REGISTRATION_OPEN` | `0` | `1` opens registration and shows the sign-up link. Off locally, so the seeded-users baseline stays unchanged. |
+| `ADMIN_EMAIL` | — | The owner's address. Once confirmed, that account is an administrator on the advanced tier. See [Administering accounts](#administering-accounts). |
 | `MAIL_TRANSPORT` | `capture` | `capture`, `log` or `smtp`. See [Email](#email). |
 | `MAIL_HOST` / `MAIL_PORT` | `127.0.0.1` / `1025` | The SMTP server. Compose points these at Mailpit. |
 | `MAIL_USER` / `MAIL_PASSWORD` | — | Only needed by a real provider. |
