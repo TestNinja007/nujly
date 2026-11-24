@@ -30,6 +30,7 @@ import {
 } from '../auth/rateLimit.js';
 import { issueResetCode, resetPassword, RESET_TTL_MINUTES } from '../auth/passwordReset.js';
 import { issueCode, verifyCode, CODE_TTL_MINUTES } from '../auth/verification.js';
+import { grantOwnerAccess, isOwnerAddress } from '../domain/owner.js';
 import { deliversExternally } from '../mail/mailer.js';
 import { sendPasswordResetCode, sendVerificationCode } from '../mail/messages.js';
 import {
@@ -211,6 +212,11 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         }
       }
 
+      // The owner's account becomes an administrator the moment its address
+      // is proven, so a replaced database needs no second step.
+      const owner =
+        isOwnerAddress(row.email, config.adminEmail) && (await grantOwnerAccess(row.email));
+
       // Confirming the address is what signs the account in for the first time.
       const session = await createSession(row.id);
       reply
@@ -218,7 +224,13 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         .setCookie(CSRF_COOKIE, session.csrfToken, { ...cookieOptions, httpOnly: false });
 
       return {
-        user: { id: row.id, email: row.email, name: row.name, role: row.role, tier: row.tier },
+        user: {
+          id: row.id,
+          email: row.email,
+          name: row.name,
+          role: owner ? 'admin' : row.role,
+          tier: owner ? 'advanced' : row.tier,
+        },
         csrfToken: session.csrfToken,
       };
     },

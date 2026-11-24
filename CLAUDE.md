@@ -199,6 +199,34 @@ Running locally for the test framework:
 TEST_SUPPORT=1 REGISTRATION_OPEN=1 npm start --workspace @nujly/api
 ```
 
+## The owner's account
+
+*Decided 24 November 2026:* the owner's account on the deployed site is an
+administrator on the advanced tier. `ADMIN_EMAIL` names it. It is set in the
+Render dashboard, and `render.yaml` marks it `sync: false`, because the
+repository is public and the address is personal.
+
+Until then every account on the site was an ordinary user on basic, which
+cannot repeat within a day. The only administrator was the seeded
+`admin@example.com`, and only an administrator can change a role or a tier.
+
+The account is promoted at every boot and the moment its address is
+confirmed, so a replaced database needs nothing more than signing up again
+(`src/api/src/domain/owner.ts`). Since every boot re-applies it, a demotion by
+another administrator lasts only until the next deploy. Only a confirmed
+address counts: until its code is entered, the account could belong to anyone
+who typed the address in.
+
+**The seeded administrator is still there,** and its password is published in
+the README. Anyone can sign in as it, see every account's address and name,
+change any role or tier, and suspend any account but its own. Removing it from
+the deployed seed was offered; the simpler fix was chosen instead. Demoting it
+from the Admin page closes the hole until the database is next replaced, when
+the seed brings it back.
+
+Nothing in the documented rules mentions the owner's account, so no test case
+covers it. It was checked by running it.
+
 ## Where things stand
 
 *Last updated 11 November 2026. Update this when it stops being true.*

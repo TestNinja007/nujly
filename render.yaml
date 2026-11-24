@@ -37,6 +37,11 @@ services:
       # baseline the test framework is written against stays unchanged.
       - key: REGISTRATION_OPEN
         value: "1"
+      # The owner's address. Once confirmed, that account is an administrator
+      # on the advanced tier (src/api/src/domain/owner.ts). Set in the
+      # dashboard rather than here: this repository is public.
+      - key: ADMIN_EMAIL
+        sync: false
       # Email. The three secret-ish values are set in the dashboard rather
       # than committed here.
       # Over HTTPS, not SMTP: Render blocks outbound SMTP ports, so a
